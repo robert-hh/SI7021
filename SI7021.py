@@ -74,7 +74,7 @@ class SI7021(object):
       except OSError:
         sleep_ms(4)
     else:
-        raise OSError
+        raise OSError('SI7021 timeout')
     temp2 = ((self.temp[0] << 8) | self.temp[1]) & self.resTemp[self.resolution]
     return (175.72 * temp2 / 65536.0) - 46.85
 
@@ -87,7 +87,7 @@ class SI7021(object):
       except OSError:
         sleep_ms(4)
     else:
-        raise OSError
+        raise OSError('SI7021 timeout')
     rh2 = ((self.rh[0] << 8) | self.rh[1]) & self.resRH[self.resolution]
     rh2 = (125.0 * rh2 / 65536.0) - 6.0
     return max(0.0, min(100.0, rh2))
