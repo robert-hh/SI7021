@@ -21,6 +21,7 @@ CMD_READ_SERIAL_3 = const(0xfc)
 CMD_READ_SERIAL_4 = const(0xc9)
 CMD_READ_REVISION_1 = const(0x84)
 CMD_READ_REVISION_2 = const(0xb8)
+I2C_POLLING_TIME = const(5)
 
 class SI7021(object):
   def __init__(self, i2c=None):
@@ -65,14 +66,15 @@ class SI7021(object):
     """
     if new:
       self.write_command(CMD_MEASURE_TEMPERATURE)
+      sleep_ms(I2C_POLLING_TIME)
     else:
       self.write_command(CMD_TEMPERATURE_FROM_PREV_RH_MEASUREMENT)
-    for _ in  range (25):
+    for _ in  range (20):
       try:
         self.i2c.readfrom_into(self.addr, self.temp)
         break
       except OSError:
-        sleep_ms(4)
+        sleep_ms(I2C_POLLING_TIME)
     else:
         raise OSError('SI7021 timeout')
     temp2 = ((self.temp[0] << 8) | self.temp[1]) & self.resTemp[self.resolution]
@@ -80,12 +82,13 @@ class SI7021(object):
 
   def readRH(self):
     self.write_command(CMD_MEASURE_RELATIVE_HUMIDITY)
-    for _ in  range (25):
+    for _ in  range (20):
+      sleep_ms(I2C_POLLING_TIME)
       try:
         self.i2c.readfrom_into(self.addr, self.rh)
         break
       except OSError:
-        sleep_ms(4)
+        pass
     else:
         raise OSError('SI7021 timeout')
     rh2 = ((self.rh[0] << 8) | self.rh[1]) & self.resRH[self.resolution]
