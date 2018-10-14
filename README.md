@@ -10,7 +10,7 @@ i2c is an I2C object which has to be created by the caller.
 
 ## Methods
 
-### temp = si7021.readTemp(new = TRue)
+### temp = si7021.readTemp(new = True)
 
 Reads the temperature and returns a °C value. If the parameter new is set to
 new, a new reading is performed. When set to False, the Value taken during
@@ -26,9 +26,9 @@ The function raises OSError if after 100ms not value is returned from the device
 ### si7021.setResolution(index)
 
 Sets the resolution for both temperature and relative humidity. Index in the
-range of 0-3 select the setting from the table below. The returned result is
-truncated according to the resolution set. The conversion time also depends
-on the resolution.
+range of 0-3 select the setting from the table below. The returned results of
+readTemp() and readRH() are truncated according to the resolution set.
+The conversion time also depends on the resolution.
 
 |Index|RH|Temp|
 |:-:|:-:|:-:|
@@ -42,9 +42,9 @@ on the resolution.
 Return the 8 byte serial number as a byte array. The fifth byte contains the
 the identification of the device. For the SI7021 it's 0x15.
 
-### serial = si7021.readVersion()
+### serial = si7021.readRevision()
 
-Return the firmware version as a single number.
+Return the firmware revision as a single byte object.
 
 ### si7021.reset()
 
