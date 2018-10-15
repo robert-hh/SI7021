@@ -33,6 +33,11 @@ class SI7021(object):
     self.resolution = 0
     self.resRH = (0xfff8, 0xff80, 0xffe0, 0xfff0)
     self.resTemp = (0xfffe, 0xfff8, 0xfffc, 0xfff0)
+    self.crctab1 = (b"\x00\x31\x62\x53\xc4\xf5\xa6\x97"
+                    b"\xb9\x88\xdb\xea\x7d\x4c\x1f\x2e")
+    self.crctab2 = (b"\x00\x43\x86\xc5\x3d\x7e\xbb\xf8"
+                    b"\x7a\x39\xfc\xbf\x47\x04\xc1\x82")
+
 
   def write_command(self, command_byte, command_ext=None):
     """
@@ -44,6 +49,16 @@ class SI7021(object):
         self.i2c.writeto(self.addr, self.cbuffer)
     else:
         self.i2c.writeto(self.addr, command_byte)
+
+  def crc8(self, data, crc=0):
+    """
+    Calculate the CRC8, x^8 + x^5 + x^4 + 1
+    """
+    for byte in data:
+       crc ^= byte
+       crc = (self.crctab1[crc & 0x0f] ^
+              self.crctab2[(crc >> 4) & 0x0f])
+    return crc
 
   def reset(self):
     """
@@ -67,18 +82,24 @@ class SI7021(object):
     if new:
       self.write_command(CMD_MEASURE_TEMPERATURE)
       sleep_ms(I2C_POLLING_TIME)
+      for _ in  range (20):
+        try:
+          self.i2c.readfrom_into(self.addr, self.temp)
+          crc = self.crc8(self.temp)
+          break
+        except OSError:
+          sleep_ms(I2C_POLLING_TIME)
+      else:
+        raise OSError('SI7021 timeout')
     else:
       self.write_command(CMD_TEMPERATURE_FROM_PREV_RH_MEASUREMENT)
-    for _ in  range (20):
-      try:
-        self.i2c.readfrom_into(self.addr, self.temp)
-        break
-      except OSError:
-        sleep_ms(I2C_POLLING_TIME)
+      self.i2c.readfrom_into(self.addr, self.temp)
+      crc = 0
+    if crc == 0:
+      temp2 = ((self.temp[0] << 8) | self.temp[1]) & self.resTemp[self.resolution]
+      return (175.72 * temp2 / 65536.0) - 46.85
     else:
-        raise OSError('SI7021 timeout')
-    temp2 = ((self.temp[0] << 8) | self.temp[1]) & self.resTemp[self.resolution]
-    return (175.72 * temp2 / 65536.0) - 46.85
+      return None
 
   def readRH(self):
     self.write_command(CMD_MEASURE_RELATIVE_HUMIDITY)
@@ -91,9 +112,12 @@ class SI7021(object):
         pass
     else:
         raise OSError('SI7021 timeout')
-    rh2 = ((self.rh[0] << 8) | self.rh[1]) & self.resRH[self.resolution]
-    rh2 = (125.0 * rh2 / 65536.0) - 6.0
-    return max(0.0, min(100.0, rh2))
+    if self.crc8(self.rh) == 0:
+      rh2 = ((self.rh[0] << 8) | self.rh[1]) & self.resRH[self.resolution]
+      rh2 = (125.0 * rh2 / 65536.0) - 6.0
+      return max(0.0, min(100.0, rh2))
+    else:
+      return None
 
   def readSerial(self):
     self.write_command(CMD_READ_SERIAL_1, CMD_READ_SERIAL_2)

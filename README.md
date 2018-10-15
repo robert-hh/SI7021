@@ -16,14 +16,15 @@ Reads the temperature and returns a °C value. If the parameter new is set to
 new, a new reading is performed. When set to False, the Value taken during
 the previous readRH() call is returned.  
 The function raises 'OSError: SI7021 timeout' if after 100ms not value is
-returned from the device.
-
+returned from the device.  
+If the CRC of the data from the sensor is wrong, the call returns None.
 
 ### rh = si7021.readRH()
 
 Reads the relative humidity. The range is 0-100.  
 The function raises 'OSError: SI7021 timeout' if after 100ms not value is
-returned from the device.
+returned from the device.  
+If the CRC of the data from the sensor is wrong, the call returns None.
 
 ### si7021.setResolution(index)
 
