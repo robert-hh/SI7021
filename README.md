@@ -10,7 +10,7 @@ i2c is an I2C object which has to be created by the caller.
 
 ## Methods
 
-### temp = si7021.readTemp(new = True)
+### temp = si7021.temperature(new = True)
 
 Reads the temperature and returns a °C value. If the parameter new is set to
 new, a new reading is performed. When set to False, the Value taken during
@@ -19,12 +19,28 @@ The function raises 'OSError: SI7021 timeout' if after 100ms not value is
 returned from the device.  
 If the CRC of the data from the sensor is wrong, the call returns None.
 
-### rh = si7021.readRH()
+### rh = si7021.humidity()
 
 Reads the relative humidity. The range is 0-100.  
 The function raises 'OSError: SI7021 timeout' if after 100ms not value is
 returned from the device.  
-If the CRC of the data from the sensor is wrong, the call returns None.
+If the CRC of the data from the sensor is wrong, the call raises 'OSError: SI7021 CRC Error'.
+
+### rh = si7021.dew_point()
+
+Reads the dew_point temperature (°C) calculated from the actual temperature and humidity.  
+The function raises 'OSError: SI7021 timeout' if after 100ms not value is
+returned from the device.  
+If the CRC of the data from the sensor is wrong, the call raises 'OSError: SI7021 CRC Error'.
+
+### rh = si7021.humid_ambient(temperature, dew_point=None)
+
+Calculate the relative humidity based on the supplied temperature and the optional
+dew_point. If no dew_point value is supplied, it will be determined.
+The range is 0-100.  
+The function raises 'OSError: SI7021 timeout' if after 100ms not value is
+returned from the device.  
+If the CRC of the data from the sensor is wrong, the call raises 'OSError: SI7021 CRC Error'.
 
 ### si7021.setResolution(index)
 
@@ -70,6 +86,7 @@ from SI7021 import SI7021
 i2c = I2C(0, I2C.MASTER)
 si7021 = SI7021(i2c)
 
-temp = si7021.readTemp()
-rh = si7021.readRH()
+temperature = si7021.temperature()
+humidity = si7021.humidity()
+dew_point = si7021.dew_point()
 ```
