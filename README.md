@@ -42,7 +42,7 @@ The function raises 'OSError: SI7021 timeout' if after 100ms not value is
 returned from the device.  
 If the CRC of the data from the sensor is wrong, the call raises 'OSError: SI7021 CRC Error'.
 
-### si7021.setResolution(index)
+### si7021.set_resolution(index)
 
 Sets the resolution for both temperature and relative humidity. Index in the
 range of 0-3 select the setting from the table below. The returned results of
