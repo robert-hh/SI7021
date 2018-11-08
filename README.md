@@ -56,12 +56,12 @@ The conversion time also depends on the resolution.
 |2|10 bit|13 bit|
 |3|11 bit|11 bit|
 
-### serial = si7021.readSerial()
+### serial = si7021.serialnumber()
 
 Return the 8 byte serial number as a byte array. The fifth byte contains the
 the identification of the device. For the SI7021 it's 0x15.
 
-### serial = si7021.readRevision()
+### serial = si7021.revision()
 
 Return the firmware revision as a single byte object.
 
