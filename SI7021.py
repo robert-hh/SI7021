@@ -34,7 +34,7 @@ class SI7021(object):
         self.cbuffer = bytearray(2)
         self.temp = bytearray(3)
         self.rh = bytearray(3)
-        self.resolution = 0
+        self._resolution = 0
         self.resRH = (0xfff8, 0xff80, 0xffe0, 0xfff0)
         self.resTemp = (0xfffe, 0xfff8, 0xfffc, 0xfff0)
         self.crctab1 = (b"\x00\x31\x62\x53\xc4\xf5\xa6\x97"
@@ -42,7 +42,7 @@ class SI7021(object):
         self.crctab2 = (b"\x00\x43\x86\xc5\x3d\x7e\xbb\xf8"
                         b"\x7a\x39\xfc\xbf\x47\x04\xc1\x82")
 
-    def write_command(self, command_byte, command_ext=None):
+    def _write_command(self, command_byte, command_ext=None):
         """
         Write a single or two-byte command
         """
@@ -53,7 +53,7 @@ class SI7021(object):
         else:
             self.i2c.writeto(self.addr, command_byte)
 
-    def crc8(self, data, crc=0):
+    def _crc8(self, data, crc=0):
         """
         Calculate the CRC8, x^8 + x^5 + x^4 + 1
         """
@@ -67,15 +67,15 @@ class SI7021(object):
         """
         Reset the device
         """
-        self.write_command(CMD_RESET)
+        self._write_command(CMD_RESET)
         sleep_ms(100)
 
     def set_resolution(self, index):
         """
         Set the resolution, index according to the data sheet
         """
-        self.resolution = index
-        self.write_command(CMD_WRITE_RH_T_USER_REGISTER_1,
+        self._resolution = index
+        self._write_command(CMD_WRITE_RH_T_USER_REGISTER_1,
             (index & 2) << 6 | (index & 1))
 
     def temperature(self, new=True):
@@ -83,12 +83,12 @@ class SI7021(object):
         Read the temperature
         """
         if new:
-            self.write_command(CMD_MEASURE_TEMPERATURE)
+            self._write_command(CMD_MEASURE_TEMPERATURE)
             sleep_ms(I2C_POLLING_TIME)
             for _ in  range (20):
                 try:
                     self.i2c.readfrom_into(self.addr, self.temp)
-                    crc = self.crc8(self.temp)
+                    crc = self._crc8(self.temp)
                     if crc != 0:
                         raise OSError('SI7021 CRC error')
                     break
@@ -97,13 +97,13 @@ class SI7021(object):
             else:
                 raise OSError('SI7021 timeout')
         else:
-            self.write_command(CMD_TEMPERATURE_FROM_PREV_RH_MEASUREMENT)
+            self._write_command(CMD_TEMPERATURE_FROM_PREV_RH_MEASUREMENT)
             self.i2c.readfrom_into(self.addr, self.temp)
-        temp2 = ((self.temp[0] << 8) | self.temp[1]) & self.resTemp[self.resolution]
+        temp2 = ((self.temp[0] << 8) | self.temp[1]) & self.resTemp[self._resolution]
         return (175.72 * temp2 / 65536.0) - 46.85
 
     def humidity(self):
-        self.write_command(CMD_MEASURE_RELATIVE_HUMIDITY)
+        self._write_command(CMD_MEASURE_RELATIVE_HUMIDITY)
         for _ in  range (20):
             sleep_ms(I2C_POLLING_TIME)
             try:
@@ -113,8 +113,8 @@ class SI7021(object):
                 pass
         else:
             raise OSError('SI7021 timeout')
-        if self.crc8(self.rh) == 0:
-            rh2 = ((self.rh[0] << 8) | self.rh[1]) & self.resRH[self.resolution]
+        if self._crc8(self.rh) == 0:
+            rh2 = ((self.rh[0] << 8) | self.rh[1]) & self.resRH[self._resolution]
             rh2 = (125.0 * rh2 / 65536.0) - 6.0
             return max(0.0, min(100.0, rh2))
         else:
@@ -141,10 +141,11 @@ class SI7021(object):
         h_ambient = math.pow(10, (h - (17.62 * t_ambient) / (243.12 + t_ambient)) * 0.4343 + 2)
         return max(0.0, min(100.0, h_ambient))
 
+    @property
     def serialnumber(self):
-        self.write_command(CMD_READ_SERIAL_1, CMD_READ_SERIAL_2)
+        self._write_command(CMD_READ_SERIAL_1, CMD_READ_SERIAL_2)
         sna = self.i2c.readfrom(self.addr, 8)
-        self.write_command(CMD_READ_SERIAL_3, CMD_READ_SERIAL_4)
+        self._write_command(CMD_READ_SERIAL_3, CMD_READ_SERIAL_4)
         snb = self.i2c.readfrom(self.addr, 6)
         serial = bytearray(8)
         for _ in range(4):
@@ -155,6 +156,7 @@ class SI7021(object):
         serial[7] = snb[4]
         return serial
 
+    @property
     def revision(self):
-        self.write_command(CMD_READ_REVISION_1, CMD_READ_REVISION_2)
+        self._write_command(CMD_READ_REVISION_1, CMD_READ_REVISION_2)
         return self.i2c.readfrom(self.addr, 1)

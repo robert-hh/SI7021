@@ -26,14 +26,14 @@ The function raises 'OSError: SI7021 timeout' if after 100ms not value is
 returned from the device.  
 If the CRC of the data from the sensor is wrong, the call raises 'OSError: SI7021 CRC Error'.
 
-### rh = si7021.dew_point()
+### dew_point = si7021.dew_point()
 
 Reads the dew_point temperature (°C) calculated from the actual temperature and humidity.  
 The function raises 'OSError: SI7021 timeout' if after 100ms not value is
 returned from the device.  
 If the CRC of the data from the sensor is wrong, the call raises 'OSError: SI7021 CRC Error'.
 
-### rh = si7021.humid_ambient(temperature, dew_point=None)
+### humid_ambient = si7021.humid_ambient(temperature, dew_point=None)
 
 Calculate the relative humidity based on the supplied temperature and the optional
 dew_point. If no dew_point value is supplied, it will be determined.
@@ -56,18 +56,20 @@ The conversion time also depends on the resolution.
 |2|10 bit|13 bit|
 |3|11 bit|11 bit|
 
-### serial = si7021.serialnumber()
-
-Return the 8 byte serial number as a byte array. The fifth byte contains the
-the identification of the device. For the SI7021 it's 0x15.
-
-### serial = si7021.revision()
-
-Return the firmware revision as a single byte object.
-
 ### si7021.reset()
 
 Resets the device. The resolution is set back to maximum.
+
+## Properties
+
+### serial = si7021.serialnumber
+
+8 byte serial number as a byte array. The fifth byte contains the
+the identification of the device. For the SI7021 it's 0x15.
+
+### serial = si7021.revision
+
+Firmware revision as a single byte object.
 
 
 ## Example
@@ -89,4 +91,5 @@ si7021 = SI7021(i2c)
 temperature = si7021.temperature()
 humidity = si7021.humidity()
 dew_point = si7021.dew_point()
+serial = si7021.serialnumber
 ```
