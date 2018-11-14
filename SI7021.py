@@ -88,8 +88,7 @@ class SI7021(object):
             for _ in  range (20):
                 try:
                     self.i2c.readfrom_into(self.addr, self.temp)
-                    crc = self._crc8(self.temp)
-                    if crc != 0:
+                    if self._crc8(self.temp) != 0:
                         raise OSError('SI7021 CRC error')
                     break
                 except OSError:
