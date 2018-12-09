@@ -121,7 +121,7 @@ class SI7021(object):
 
     def dew_point(self):
         """
-        Compute the dew point temperaturefor the current Temperature
+        Compute the dew point temperature for the current Temperature
         and Humidity measured pair
         """
         temp = self.temperature()

@@ -77,7 +77,7 @@ Firmware revision as a single byte object.
 ```
 # Example for Pycom device.
 # Connections:
-# xxPy | ADS7818
+# xxPy | SI7021
 # -----|-------
 # P9   |  SDA
 # P10  |  SCL
