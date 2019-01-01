@@ -27,6 +27,7 @@ CMD_READ_REVISION_1 = const(0x84)
 CMD_READ_REVISION_2 = const(0xb8)
 I2C_POLLING_TIME = const(5)
 
+
 class SI7021(object):
     def __init__(self, i2c=None):
         self.i2c = i2c
@@ -58,9 +59,9 @@ class SI7021(object):
         Calculate the CRC8, x^8 + x^5 + x^4 + 1
         """
         for byte in data:
-           crc ^= byte
-           crc = (self.crctab1[crc & 0x0f] ^
-                  self.crctab2[(crc >> 4) & 0x0f])
+            crc ^= byte
+            crc = (self.crctab1[crc & 0x0f] ^
+                   self.crctab2[(crc >> 4) & 0x0f])
         return crc
 
     def reset(self):
@@ -76,7 +77,7 @@ class SI7021(object):
         """
         self._resolution = index
         self._write_command(CMD_WRITE_RH_T_USER_REGISTER_1,
-            (index & 2) << 6 | (index & 1))
+                            (index & 2) << 6 | (index & 1))
 
     def temperature(self, new=True):
         """
@@ -85,25 +86,26 @@ class SI7021(object):
         if new:
             self._write_command(CMD_MEASURE_TEMPERATURE)
             sleep_ms(I2C_POLLING_TIME)
-            for _ in  range (20):
+            for _ in range(20):
                 try:
                     self.i2c.readfrom_into(self.addr, self.temp)
                     if self._crc8(self.temp) != 0:
                         raise OSError('SI7021 CRC error')
                     break
                 except OSError:
-                  sleep_ms(I2C_POLLING_TIME)
+                    sleep_ms(I2C_POLLING_TIME)
             else:
                 raise OSError('SI7021 timeout')
         else:
             self._write_command(CMD_TEMPERATURE_FROM_PREV_RH_MEASUREMENT)
             self.i2c.readfrom_into(self.addr, self.temp)
-        temp2 = ((self.temp[0] << 8) | self.temp[1]) & self.resTemp[self._resolution]
+        temp2 = (((self.temp[0] << 8) | self.temp[1]) &
+                 self.resTemp[self._resolution])
         return (175.72 * temp2 / 65536.0) - 46.85
 
     def humidity(self):
         self._write_command(CMD_MEASURE_RELATIVE_HUMIDITY)
-        for _ in  range (20):
+        for _ in range(20):
             sleep_ms(I2C_POLLING_TIME)
             try:
                 self.i2c.readfrom_into(self.addr, self.rh)
@@ -113,7 +115,8 @@ class SI7021(object):
         else:
             raise OSError('SI7021 timeout')
         if self._crc8(self.rh) == 0:
-            rh2 = ((self.rh[0] << 8) | self.rh[1]) & self.resRH[self._resolution]
+            rh2 = (((self.rh[0] << 8) | self.rh[1]) &
+                   self.resRH[self._resolution])
             rh2 = (125.0 * rh2 / 65536.0) - 6.0
             return max(0.0, min(100.0, rh2))
         else:
@@ -126,18 +129,21 @@ class SI7021(object):
         """
         temp = self.temperature()
         humid = self.humidity()
-        h = (math.log(humid, 10) - 2) / 0.4343 + (17.62 * temp) / (243.12 + temp)
+        h = ((math.log(humid, 10) - 2) / 0.4343 +
+             (17.62 * temp) / (243.12 + temp))
         dew_p = 243.12 * h / (17.62 - h)
         return dew_p
 
-    def humid_ambient(self, t_ambient, dew_p = None):
+    def humid_ambient(self, t_ambient, dew_p=None):
         """
-        Returns the relative humidity compensated for the current ambient temperature
+        Returns the relative humidity compensated for the current
+        ambient temperature
         """
         if dew_p is None:
             dew_p = self.dew_point()
         h = 17.62 * dew_p / (243.12 + dew_p)
-        h_ambient = math.pow(10, (h - (17.62 * t_ambient) / (243.12 + t_ambient)) * 0.4343 + 2)
+        h_ambient = math.pow(10, (h - (17.62 * t_ambient) /
+                             (243.12 + t_ambient)) * 0.4343 + 2)
         return max(0.0, min(100.0, h_ambient))
 
     @property
