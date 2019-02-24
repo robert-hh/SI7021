@@ -1,5 +1,7 @@
 # SI7021: Python class for the SI7021 Temperature and Relative Humidity sensor
 
+(The MIT License (MIT) applies)
+
 This is a very short and simple class. It uses the I2C bus for the interface.
 
 ## Constructor
