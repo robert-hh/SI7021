@@ -75,7 +75,7 @@ class SI7021(object):
             self.cbuffer[1] = command_ext
             self.i2c.writeto(self.addr, self.cbuffer)
         else:
-            self.i2c.writeto(self.addr, command_byte)
+            self.i2c.writeto(self.addr, bytes([command_byte])
 
     def _crc8(self, data, crc=0):
         """
